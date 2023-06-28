@@ -7,7 +7,6 @@ import pygame._sdl2.audio as sdl2_audio
 from pydub import AudioSegment
 import keyboard
 import os
-import time
 
 device = None
 
