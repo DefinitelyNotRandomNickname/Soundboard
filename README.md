@@ -6,7 +6,7 @@ Please note that this script requires certain libraries listed in the `requireme
 
 If you wanna hear sounds that you are streaming to VB cable go to the `Sound -> Recording -> CABLE Output -> Properties -> Listen` and check `Listen to this device`.
 
-![](https://github.com/DefinitelyNotRandomNickname/Soundboard/tree/main/rd_prp.png)
+![](https://github.com/DefinitelyNotRandomNickname/Soundboard/blob/main/rd_prp.png)
 
 It's important to mention that this program has only been tested on Windows. While it may not be compatible with Linux or Mac operating systems, you can still give it a try.
 
