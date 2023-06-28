@@ -58,6 +58,8 @@ def play():
     global device
 
     if not pygame.mixer.music.get_busy() and track:
+        pygame.mixer.music.stop()
+        pygame.mixer.music.unload()
         # Clear folder
         for filename in os.listdir("tmp"):
             file_path = os.path.join("tmp", filename)
