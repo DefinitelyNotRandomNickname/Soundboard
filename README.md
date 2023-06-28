@@ -2,7 +2,7 @@
 ## Description:
 The Soundboard is a Python script that allows you to play audio files through specific output devices, change their volume, and adjust the decibel level.
 
-Please note that this script requires certain libraries listed in the `requirements.txt` file. You can install them by running the command `pip install -r requirements.txt`. Additionally, you will need to download VB-Cable from `https://vb-audio.com/Cable/` for the best use of this program and FFmpeg from `https://ffmpeg.org/download.html` to increase dB.
+Please note that this script requires certain libraries listed in the `requirements.txt` file. You can install them by running the command `pip install -r requirements.txt`. Additionally, you will need to download [VB-Cable](https://vb-audio.com/Cable/) for the best use of this program and [FFmpeg](https://ffmpeg.org/download.html) to increase dB.
 
 If you wanna hear sounds that you are streaming to VB cable go to the `Sound -> Recording -> CABLE Output -> Properties -> Listen` and check `Listen to this device`.
 
