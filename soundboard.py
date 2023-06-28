@@ -55,6 +55,7 @@ def update_db_label(value):
 def play():
     global track
     global dB
+    global volume
     global device
 
     if not pygame.mixer.music.get_busy() and track:
@@ -80,6 +81,7 @@ def play():
 
         pygame.mixer.quit()
         pygame.mixer.init(devicename=device)
+        pygame.mixer.music.set_volume(volume.get() / 100)
         pygame.mixer.music.load(temp_file)
         pygame.mixer.music.play()
     else:
