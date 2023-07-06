@@ -3,3 +3,4 @@ ttkthemes
 pygame
 pydub
 keyboard
+functools

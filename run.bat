@@ -1,2 +1,2 @@
 @echo off
-start pythonw "soundboard.py"
+start /B pythonw "soundboard.py"

@@ -4,26 +4,49 @@ from ttkthemes import ThemedStyle
 
 import pygame
 import pygame._sdl2.audio as sdl2_audio
-from pydub import AudioSegment
 import keyboard
 import os
+import platform
+import subprocess
+from pydub import AudioSegment
+from functools import wraps
 
 device = None
 
 play_handler = None
 play_button = None
 
+stop_button = 'F8'
+
+song_label = None
+
 volume = None
 db = None
+db_enabled = False
 
 audio_folder = 'tracks'
 track = None
 
+is_playing = False
+
+__old_Popen = subprocess.Popen
+
+
+@wraps(__old_Popen)
+def new_Popen(*args, startupinfo=None, **kwargs):
+    if startupinfo is None:
+        startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+
+    return __old_Popen(*args, startupinfo=startupinfo, **kwargs)
+
 
 def refresh_list(item_list):
+    global audio_folder
+
     # Get the list of items from the folder
-    folder = 'tracks'  # Replace with the actual folder path
-    items = os.listdir(folder)
+    items = os.listdir(audio_folder)
 
     # Clear the existing list
     item_list.delete(0, tk.END)
@@ -42,6 +65,7 @@ def change_track(event):
 
 def update_volume_label(value):
     global volume
+
     new_value = float(value)
     volume.set(int(new_value))
     pygame.mixer.music.set_volume(new_value / 100)
@@ -49,44 +73,82 @@ def update_volume_label(value):
 
 def update_db_label(value):
     global db
+
     db.set(int(float(value)))
+
+
+def music_stopped():
+    global song_label
+
+    song_label.configure(text="")
+
+
+def check_music_stopped():
+    global stop_button
+    global is_playing
+
+    if is_playing and not pygame.mixer.music.get_busy():
+        keyboard.release(stop_button)
+        music_stopped()
+        is_playing = False
+    root.after(5000, check_music_stopped)
 
 
 def play():
     global track
-    global dB
+    global db
+    global db_enabled
     global volume
     global device
+    global song_label
+    global stop_button
+    global is_playing
 
     if not pygame.mixer.music.get_busy() and track:
+        keyboard.release(stop_button)
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
+
         # Clear folder
         for filename in os.listdir("tmp"):
             file_path = os.path.join("tmp", filename)
             if os.path.isfile(file_path):
                 # Remove the file
                 os.remove(file_path)
+                
+        if db_enabled.get():
+            subprocess.Popen = new_Popen
 
-        # Load the audio file using pydub
-        audio = audio_folder + '/' + track
-        audio_file = AudioSegment.from_file(audio)
+            song_label.configure(text="Increasing dB")
+            # Load the audio file using pydub
+            audio = audio_folder + '/' + track
+            audio_file = AudioSegment.from_file(audio)
 
-        # Increase the volume by a certain dB level
-        audio_db = audio_file + db.get()
+            # Increase the volume by a certain dB level
+            audio_db = audio_file + db.get()
 
-        # Export the modified audio to a temporary file
-        temp_file = "tmp" + '/' + track
-        audio_db.export(temp_file, format="mp3")
+            # Export the modified audio to a temporary file
+            temp_file = "tmp" + '/' + track
+            audio_db.export(temp_file, format="mp3")
+        else:
+            temp_file = audio_folder + '/' + track
 
         pygame.mixer.quit()
         pygame.mixer.init(devicename=device)
         pygame.mixer.music.set_volume(volume.get() / 100)
+
+        song_label.configure(text=f"Loading {track}")
         pygame.mixer.music.load(temp_file)
+        song_label.configure(text=f"Playing {track}")
+        keyboard.press(stop_button)
         pygame.mixer.music.play()
+        is_playing = True
     else:
+        keyboard.release(stop_button)
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
+        song_label.configure(text="")
+        is_playing = False
 
 
 def play_keys(event):
@@ -126,6 +188,12 @@ def init_buttons():
     refresh_button = ttk.Button(root, image=icon_image, command=lambda: refresh_list(item_list))
     refresh_button.image = icon_image
     refresh_button.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+
+    global song_label
+
+    # Create a song title
+    song_label = ttk.Label(root, text="")
+    song_label.grid(row=0, column=1, pady=10, sticky="w")
 
     # Create a frame for extended volume slider, and loopback checkbox
     controls_frame = ttk.Frame(root, padding=10)
@@ -178,6 +246,23 @@ def init_buttons():
     # Create a volume value label
     db_display_label = ttk.Label(controls_frame, textvariable=db)
     db_display_label.grid(row=7, column=1, pady=5, sticky="w")
+    
+    global db_enabled
+    db_enabled = tk.BooleanVar(value=False)
+    
+    # Create a button for enabling dB changes
+    db_enabled_button = ttk.Checkbutton(controls_frame, variable=db_enabled, onvalue=True, offvalue=False)
+    db_enabled_button.grid(row=8, column=1, pady=5, sticky="w")
+    
+    # Create label for dB changes button
+    db_enabled_label = ttk.Label(controls_frame, text="dB enabled")
+    db_enabled_label.grid(row=8, column=0, pady=5, sticky="e")
+
+    global stop_button
+
+    # Create a pressed key info
+    pressed_key_info = ttk.Label(controls_frame, text=f"Pressed key: {stop_button}")
+    pressed_key_info.grid(row=9, column=0, pady=5, sticky="w")
 
     # Configure row and column weights
     root.columnconfigure(0, weight=1)
@@ -219,5 +304,12 @@ if __name__ == "__main__":
         print("No matching devices found.")
         pygame.mixer.quit()
 
+    # Set the custom event to trigger when the music finishes playing
+    pygame.mixer.music.set_endevent(pygame.USEREVENT + 1)
+
+    check_music_stopped()
+
     # Start the Tkinter event loop
     root.mainloop()
+
+    pygame.quit()
