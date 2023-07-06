@@ -24,8 +24,10 @@ To import audio files, simply place them in the `tracks/` folder and refresh the
 include `.mp3` and `.wav`.
 
 ## In app
+During playing audio program presses key `F8`, if you have push to talk options in apps.
 
 To play a track, follow these steps:
 
 1. Select a track from the list.
 2. Press the assigned key to play the selected track (default key is `F12`).
+3. To enable dB increase check dB enabled
